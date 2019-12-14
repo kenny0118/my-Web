@@ -1,0 +1,108 @@
+﻿<!DOCTYPE HTML>
+<html>
+
+<head>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+        integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+        integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+        crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+        crossorigin="anonymous"></script>
+</head>
+
+<body data-rsssl=1>
+    <canvas id="myCanvas" width="1200" height="500"></canvas>
+    <script>
+        var canvas = document.getElementById('myCanvas');
+        var cv = canvas.getContext('2d');
+
+        var size = 4;
+        var mapx = 1200/size;
+        var mapy = 500/size;
+
+        var nowx=0,nowy=0;
+        var arr = [];
+        cv.beginPath();cv.rect(0, 0, 1200, 500);cv.fillStyle = "#000000";cv.fill();
+        for(var i=0;i<mapx;i++){
+            arr[i] = [];
+            for(var j=0;j<mapy;j++){
+                arr[i][j] = [];
+                arr[i][j][0] = "#e0e0e0";
+                for(var k=1;k<5;k++){
+                    arr[i][j][k] = 1;
+                    drawline(i,j,k,"#000000");
+                }
+                drawrect(i,j,arr[i][j][0]);
+                
+            }
+        }
+
+        setInterval(function() {
+            if(nowx!=0 || nowy!=0 || arr[mapx-1][mapy-1][0]!="#ffff00"){
+                var WallBreak = [];
+                if (nowy > 0 && arr[nowx][nowy-1][0] == "#e0e0e0") {WallBreak.push(1);}
+                if (nowx < mapx-1 && arr[nowx+1][nowy][0] == "#e0e0e0") {WallBreak.push(2);}
+                if (nowy < mapy-1 && arr[nowx][nowy+1][0] == "#e0e0e0") {WallBreak.push(3);}
+                if (nowx > 0 && arr[nowx-1][nowy][0] == "#e0e0e0") {WallBreak.push(4);}
+                if(WallBreak.length>0){
+                    arr[nowx][nowy][0] = "#0000ff";
+                    drawrect(nowx,nowy,arr[nowx][nowy][0]);
+                    var rand = Math.floor(Math.random()*WallBreak.length);
+                    arr[nowx][nowy][WallBreak[rand]]=0;
+                    drawline(nowx,nowy,WallBreak[rand],"#0000ff");
+                    if(WallBreak[rand]==1){nowy--;}
+                    if(WallBreak[rand]==2){nowx++;}
+                    if(WallBreak[rand]==3){nowy++;}
+                    if(WallBreak[rand]==4){nowx--;}
+                    arr[nowx][nowy][(WallBreak[rand]+1)%4+1]=0;
+                }else{
+                    arr[nowx][nowy][0] = "#ffff00";
+                    drawrect(nowx,nowy,arr[nowx][nowy][0]);
+                    if(nowy>0 && arr[nowx][nowy][1]==0 && arr[nowx][nowy-1][0]=="#0000ff"){nowy--;drawline(nowx,nowy,3,"#ffff00");}else
+                    if(nowx<mapx-1 && arr[nowx][nowy][2]==0 && arr[nowx+1][nowy][0]=="#0000ff"){nowx++;drawline(nowx,nowy,4,"#ffff00");}else
+                    if(nowy<mapy-1 && arr[nowx][nowy][3]==0 && arr[nowx][nowy+1][0]=="#0000ff"){nowy++;drawline(nowx,nowy,1,"#ffff00");}else
+                    if(nowx>0 && arr[nowx][nowy][4]==0 && arr[nowx-1][nowy][0]=="#0000ff"){nowx--;drawline(nowx,nowy,2,"#ffff00");}
+                }
+                drawrect(nowx,nowy,"#ff0000");
+            }else if(arr[mapx-1][mapy-1][0]!="#409070"){
+                cv.beginPath();cv.rect(0, 0, 1200, 500);cv.fillStyle = "#ff0000";cv.fill();
+                for(var i=0;i<mapx;i++){
+                    for(var j=0;j<mapy;j++){
+                        drawrect(i,j,"#409070")
+                        for(var k=1;k<5;k++){
+                            if(!arr[i][j][k]){drawline(i,j,k,"#409070");}
+                        }
+                    }
+                }
+            }
+        }, 1);
+
+        function drawrect(x,y,color){
+            cv.beginPath();
+            cv.rect(x*size+1, y*size+1, size-2, size-2);
+            cv.fillStyle = color;
+            cv.fill();
+        }
+        function drawline(x,y,direction,color){
+            cv.beginPath();
+            cv.lineWidth = 2;
+            if(direction==1){cv.moveTo(x*size+1, y*size);
+                cv.lineTo((x+1)*size-1, y*size);}
+            if(direction==2){cv.moveTo((x+1)*size, y*size+1);
+                cv.lineTo((x+1)*size, (y+1)*size-1);}
+            if(direction==3){cv.moveTo((x+1)*size-1, (y+1)*size);
+                cv.lineTo(x*size+1, (y+1)*size);}
+            if(direction==4){cv.moveTo(x*size, (y+1)*size-1);
+                cv.lineTo(x*size, y*size+1);}
+            cv.strokeStyle = color;
+            cv.stroke();
+        }
+    </script>
+</body>
+
+</html>
